@@ -1,7 +1,5 @@
 import { useState, useMemo } from 'react'
-import { ArrowUpDown } from 'lucide-react'
 import type { GiftEntry } from '../types'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -22,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
