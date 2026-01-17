@@ -51,8 +51,6 @@ export const GiftForm = ({
     ...baseValues,
     date: new Date().toISOString().slice(0, 10),
   }))
-  const [showOtherPersonInput, setShowOtherPersonInput] = useState(false)
-  const [showOtherOccasionInput, setShowOtherOccasionInput] = useState(false)
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -66,26 +64,6 @@ export const GiftForm = ({
     setValues((prev) => ({ ...prev, direction: value }))
   }
 
-  const handlePersonSelectChange = (value: string) => {
-    if (value === 'other') {
-      setShowOtherPersonInput(true)
-      setValues((prev) => ({ ...prev, person: '' })) // Clear person when "other" is selected
-    } else {
-      setShowOtherPersonInput(false)
-      setValues((prev) => ({ ...prev, person: value }))
-    }
-  }
-
-  const handleOccasionSelectChange = (value: string) => {
-    if (value === 'other') {
-      setShowOtherOccasionInput(true)
-      setValues((prev) => ({ ...prev, occasion: '' })) // Clear occasion when "other" is selected
-    } else {
-      setShowOtherOccasionInput(false)
-      setValues((prev) => ({ ...prev, occasion: value }))
-    }
-  }
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     await onSubmit(values)
@@ -93,13 +71,11 @@ export const GiftForm = ({
       ...baseValues,
       date: new Date().toISOString().slice(0, 10),
     })
-    setShowOtherPersonInput(false)
-    setShowOtherOccasionInput(false)
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4 md:grid-cols-2 max-h-[70vh] overflow-y-auto px-4">
+      <div className="max-h-[70vh] grid gap-4 overflow-y-auto px-4 py-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="direction">区分</Label>
           <Select
@@ -132,65 +108,37 @@ export const GiftForm = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="person">相手</Label>
-          <Select
-            value={showOtherPersonInput ? 'other' : values.person}
-            onValueChange={handlePersonSelectChange}
+          <Input
+            id="person"
+            name="person"
+            list="person-options"
+            value={values.person}
+            onChange={handleChange}
+            placeholder="入力 or 過去の候補から選択"
             required
-          >
-            <SelectTrigger id="person">
-              <SelectValue placeholder="相手を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {pastPersons.map((person) => (
-                <SelectItem key={person} value={person}>
-                  {person}
-                </SelectItem>
-              ))}
-              <SelectItem value="other">その他 (手入力)</SelectItem>
-            </SelectContent>
-          </Select>
-          {showOtherPersonInput && (
-            <Input
-              id="otherPerson"
-              name="person"
-              value={values.person}
-              onChange={handleChange}
-              placeholder="新しい相手を入力"
-              className="mt-2"
-              required
-            />
-          )}
+          />
+          <datalist id="person-options">
+            {pastPersons.map((person) => (
+              <option key={person} value={person} />
+            ))}
+          </datalist>
         </div>
         <div className="space-y-2">
           <Label htmlFor="occasion">シーン</Label>
-          <Select
-            value={showOtherOccasionInput ? 'other' : values.occasion}
-            onValueChange={handleOccasionSelectChange}
+          <Input
+            id="occasion"
+            name="occasion"
+            list="occasion-options"
+            value={values.occasion}
+            onChange={handleChange}
+            placeholder="入力 or 過去の候補から選択"
             required
-          >
-            <SelectTrigger id="occasion">
-              <SelectValue placeholder="シーンを選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {pastOccasions.map((occasion) => (
-                <SelectItem key={occasion} value={occasion}>
-                  {occasion}
-                </SelectItem>
-              ))}
-              <SelectItem value="other">その他 (手入力)</SelectItem>
-            </SelectContent>
-          </Select>
-          {showOtherOccasionInput && (
-            <Input
-              id="otherOccasion"
-              name="occasion"
-              value={values.occasion}
-              onChange={handleChange}
-              placeholder="新しいシーンを入力"
-              className="mt-2"
-              required
-            />
-          )}
+          />
+          <datalist id="occasion-options">
+            {pastOccasions.map((occasion) => (
+              <option key={occasion} value={occasion} />
+            ))}
+          </datalist>
         </div>
         <div className="space-y-2">
           <Label htmlFor="item">品物</Label>
@@ -199,7 +147,7 @@ export const GiftForm = ({
             name="item"
             value={values.item}
             onChange={handleChange}
-            placeholder="例: ワイン、お菓子"
+            placeholder="例: ワイン、現金"
             required
           />
         </div>
@@ -234,4 +182,3 @@ export const GiftForm = ({
     </form>
   )
 }
-

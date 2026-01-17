@@ -36,19 +36,10 @@ export const EditGiftForm = ({
   pastOccasions,
 }: EditGiftFormProps) => {
   const [values, setValues] = useState<EditGiftFormValues>(initialValues)
-  const [showOtherPersonInput, setShowOtherPersonInput] = useState(false)
-  const [showOtherOccasionInput, setShowOtherOccasionInput] = useState(false)
 
   useEffect(() => {
     setValues(initialValues)
-    // Reset "other" input visibility when initialValues change
-    setShowOtherPersonInput(
-      !pastPersons.includes(initialValues.person) && initialValues.person !== '',
-    )
-    setShowOtherOccasionInput(
-      !pastOccasions.includes(initialValues.occasion) && initialValues.occasion !== '',
-    )
-  }, [initialValues, pastPersons, pastOccasions])
+  }, [initialValues])
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -62,26 +53,6 @@ export const EditGiftForm = ({
     setValues((prev) => ({ ...prev, direction: value }))
   }
 
-  const handlePersonSelectChange = (value: string) => {
-    if (value === 'other') {
-      setShowOtherPersonInput(true)
-      setValues((prev) => ({ ...prev, person: '' }))
-    } else {
-      setShowOtherPersonInput(false)
-      setValues((prev) => ({ ...prev, person: value }))
-    }
-  }
-
-  const handleOccasionSelectChange = (value: string) => {
-    if (value === 'other') {
-      setShowOtherOccasionInput(true)
-      setValues((prev) => ({ ...prev, occasion: '' }))
-    } else {
-      setShowOtherOccasionInput(false)
-      setValues((prev) => ({ ...prev, occasion: value }))
-    }
-  }
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     await onSubmit(initialValues.id, values)
@@ -93,7 +64,7 @@ export const EditGiftForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4 md:grid-cols-2 max-h-[70vh] overflow-y-auto px-4">
+      <div className="max-h-[70vh] grid gap-4 overflow-y-auto px-4 py-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="direction">区分</Label>
           <Select
@@ -128,81 +99,39 @@ export const EditGiftForm = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="person">相手</Label>
-          <Select
-            value={
-              showOtherPersonInput
-                ? 'other'
-                : pastPersons.includes(values.person)
-                  ? values.person
-                  : 'other' // If current person is not in pastPersons, treat as 'other'
-            }
-            onValueChange={handlePersonSelectChange}
+          <Input
+            id="person"
+            name="person"
+            list="person-options-edit"
+            value={values.person}
+            onChange={handleChange}
+            placeholder="入力 or 過去の候補から選択"
             required
             disabled={isSaving}
-          >
-            <SelectTrigger id="person">
-              <SelectValue placeholder="相手を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {pastPersons.map((person) => (
-                <SelectItem key={person} value={person}>
-                  {person}
-                </SelectItem>
-              ))}
-              <SelectItem value="other">その他 (手入力)</SelectItem>
-            </SelectContent>
-          </Select>
-          {showOtherPersonInput && (
-            <Input
-              id="otherPerson"
-              name="person"
-              value={values.person}
-              onChange={handleChange}
-              placeholder="新しい相手を入力"
-              className="mt-2"
-              required
-              disabled={isSaving}
-            />
-          )}
+          />
+          <datalist id="person-options-edit">
+            {pastPersons.map((person) => (
+              <option key={person} value={person} />
+            ))}
+          </datalist>
         </div>
         <div className="space-y-2">
           <Label htmlFor="occasion">シーン</Label>
-          <Select
-            value={
-              showOtherOccasionInput
-                ? 'other'
-                : pastOccasions.includes(values.occasion)
-                  ? values.occasion
-                  : 'other' // If current occasion is not in pastOccasions, treat as 'other'
-            }
-            onValueChange={handleOccasionSelectChange}
+          <Input
+            id="occasion"
+            name="occasion"
+            list="occasion-options-edit"
+            value={values.occasion}
+            onChange={handleChange}
+            placeholder="入力 or 過去の候補から選択"
             required
             disabled={isSaving}
-          >
-            <SelectTrigger id="occasion">
-              <SelectValue placeholder="シーンを選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {pastOccasions.map((occasion) => (
-                <SelectItem key={occasion} value={occasion}>
-                  {occasion}
-                </SelectItem>
-              ))}
-              <SelectItem value="other">その他 (手入力)</SelectItem>
-            </SelectContent>
-          </Select>
-          {showOtherOccasionInput && (
-            <Input
-              id="otherOccasion"
-              name="occasion"
-              value={values.occasion}
-              onChange={handleChange}
-              placeholder="新しいシーンを入力"
-              className="mt-2"
-              required
-              disabled={isSaving}
-            />
-          )}
+          />
+          <datalist id="occasion-options-edit">
+            {pastOccasions.map((occasion) => (
+              <option key={occasion} value={occasion} />
+            ))}
+          </datalist>
         </div>
         <div className="space-y-2">
           <Label htmlFor="item">品物</Label>
@@ -211,7 +140,7 @@ export const EditGiftForm = ({
             name="item"
             value={values.item}
             onChange={handleChange}
-            placeholder="例: ワイン、お菓子"
+            placeholder="例: ワイン、現金"
             required
             disabled={isSaving}
           />
@@ -241,12 +170,22 @@ export const EditGiftForm = ({
         </div>
       </div>
       <DialogFooter className="flex-row justify-between">
-        <Button type="button" variant="destructive" onClick={handleDelete} disabled={isSaving}>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={handleDelete}
+          disabled={isSaving}
+        >
           <Trash2 className="mr-2 h-4 w-4" />
           削除
         </Button>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSaving}
+          >
             キャンセル
           </Button>
           <Button type="submit" disabled={isSaving}>
