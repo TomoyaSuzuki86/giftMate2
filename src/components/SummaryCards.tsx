@@ -1,4 +1,10 @@
 import { ArrowDownLeft, ArrowUpRight, Scale } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 type SummaryCardsProps = {
   totalGiven: number
@@ -18,43 +24,45 @@ export const SummaryCards = ({
 }: SummaryCardsProps) => {
   const balanceLabel =
     balance === 0
-      ? 'ちょうど均衡'
+      ? '均衡が取れています'
       : balance > 0
-        ? '受け取った方が多い'
-        : '贈った方が多い'
+        ? `${formatCurrency(balance)} 分、多く受け取っています`
+        : `${formatCurrency(Math.abs(balance))} 分、多く贈っています`
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <div className="glass-card rounded-3xl p-6">
-        <div className="flex items-center gap-3 text-emerald-900">
-          <ArrowUpRight className="h-5 w-5" />
-          <span className="text-sm font-semibold tracking-[0.2em] text-emerald-700">
-            贈った合計
-          </span>
-        </div>
-        <p className="mt-4 font-display text-3xl">{formatCurrency(totalGiven)}</p>
-      </div>
-      <div className="glass-card rounded-3xl p-6">
-        <div className="flex items-center gap-3 text-emerald-900">
-          <ArrowDownLeft className="h-5 w-5" />
-          <span className="text-sm font-semibold tracking-[0.2em] text-emerald-700">
-            受け取った合計
-          </span>
-        </div>
-        <p className="mt-4 font-display text-3xl">
-          {formatCurrency(totalReceived)}
-        </p>
-      </div>
-      <div className="glass-card rounded-3xl p-6">
-        <div className="flex items-center gap-3 text-emerald-900">
-          <Scale className="h-5 w-5" />
-          <span className="text-sm font-semibold tracking-[0.2em] text-emerald-700">
-            バランス
-          </span>
-        </div>
-        <p className="mt-4 font-display text-3xl">{formatCurrency(balance)}</p>
-        <p className="mt-2 text-sm text-slate-600">{balanceLabel}</p>
-      </div>
+    <div className="grid gap-4 md:grid-cols-3">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">贈った合計</CardTitle>
+          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {formatCurrency(totalGiven)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">受け取った合計</CardTitle>
+          <ArrowDownLeft className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {formatCurrency(totalReceived)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">現在のバランス</CardTitle>
+          <Scale className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
+          <p className="text-xs text-muted-foreground">{balanceLabel}</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

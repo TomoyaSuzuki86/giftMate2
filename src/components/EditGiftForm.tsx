@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import type { GiftDirection } from '../types'
+import type { GiftDirection, GiftEntry } from '../types'
 import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -12,47 +12,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 
-type GiftFormValues = {
-  direction: GiftDirection
-  amount: number
-  person: string
-  occasion: string
-  item: string
-  date: string
-  note: string
-}
+type EditGiftFormValues = Omit<GiftEntry, 'id'>
 
-type GiftFormProps = {
-  onSubmit: (values: GiftFormValues) => Promise<void>
+type EditGiftFormProps = {
+  initialValues: GiftEntry
+  onSubmit: (id: string, values: EditGiftFormValues) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+  onCancel: () => void
   isSaving: boolean
   pastPersons: string[]
   pastOccasions: string[]
 }
 
-const baseValues: GiftFormValues = {
-  direction: 'given',
-  amount: 0,
-  person: '',
-  occasion: '',
-  item: '',
-  date: '',
-  note: '',
-}
-
-export const GiftForm = ({
+export const EditGiftForm = ({
+  initialValues,
   onSubmit,
+  onDelete,
+  onCancel,
   isSaving,
   pastPersons,
   pastOccasions,
-}: GiftFormProps) => {
-  const [values, setValues] = useState<GiftFormValues>(() => ({
-    ...baseValues,
-    date: new Date().toISOString().slice(0, 10),
-  }))
+}: EditGiftFormProps) => {
+  const [values, setValues] = useState<EditGiftFormValues>(initialValues)
   const [showOtherPersonInput, setShowOtherPersonInput] = useState(false)
   const [showOtherOccasionInput, setShowOtherOccasionInput] = useState(false)
+
+  useEffect(() => {
+    setValues(initialValues)
+    // Reset "other" input visibility when initialValues change
+    setShowOtherPersonInput(
+      !pastPersons.includes(initialValues.person) && initialValues.person !== '',
+    )
+    setShowOtherOccasionInput(
+      !pastOccasions.includes(initialValues.occasion) && initialValues.occasion !== '',
+    )
+  }, [initialValues, pastPersons, pastOccasions])
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -69,7 +65,7 @@ export const GiftForm = ({
   const handlePersonSelectChange = (value: string) => {
     if (value === 'other') {
       setShowOtherPersonInput(true)
-      setValues((prev) => ({ ...prev, person: '' })) // Clear person when "other" is selected
+      setValues((prev) => ({ ...prev, person: '' }))
     } else {
       setShowOtherPersonInput(false)
       setValues((prev) => ({ ...prev, person: value }))
@@ -79,7 +75,7 @@ export const GiftForm = ({
   const handleOccasionSelectChange = (value: string) => {
     if (value === 'other') {
       setShowOtherOccasionInput(true)
-      setValues((prev) => ({ ...prev, occasion: '' })) // Clear occasion when "other" is selected
+      setValues((prev) => ({ ...prev, occasion: '' }))
     } else {
       setShowOtherOccasionInput(false)
       setValues((prev) => ({ ...prev, occasion: value }))
@@ -88,13 +84,11 @@ export const GiftForm = ({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    await onSubmit(values)
-    setValues({
-      ...baseValues,
-      date: new Date().toISOString().slice(0, 10),
-    })
-    setShowOtherPersonInput(false)
-    setShowOtherOccasionInput(false)
+    await onSubmit(initialValues.id, values)
+  }
+
+  const handleDelete = async () => {
+    await onDelete(initialValues.id)
   }
 
   return (
@@ -107,6 +101,7 @@ export const GiftForm = ({
             value={values.direction}
             onValueChange={handleDirectionChange}
             required
+            disabled={isSaving}
           >
             <SelectTrigger id="direction">
               <SelectValue placeholder="区分を選択" />
@@ -128,14 +123,22 @@ export const GiftForm = ({
             onChange={handleChange}
             placeholder="例: 5000"
             required
+            disabled={isSaving}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="person">相手</Label>
           <Select
-            value={showOtherPersonInput ? 'other' : values.person}
+            value={
+              showOtherPersonInput
+                ? 'other'
+                : pastPersons.includes(values.person)
+                  ? values.person
+                  : 'other' // If current person is not in pastPersons, treat as 'other'
+            }
             onValueChange={handlePersonSelectChange}
             required
+            disabled={isSaving}
           >
             <SelectTrigger id="person">
               <SelectValue placeholder="相手を選択" />
@@ -158,15 +161,23 @@ export const GiftForm = ({
               placeholder="新しい相手を入力"
               className="mt-2"
               required
+              disabled={isSaving}
             />
           )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="occasion">シーン</Label>
           <Select
-            value={showOtherOccasionInput ? 'other' : values.occasion}
+            value={
+              showOtherOccasionInput
+                ? 'other'
+                : pastOccasions.includes(values.occasion)
+                  ? values.occasion
+                  : 'other' // If current occasion is not in pastOccasions, treat as 'other'
+            }
             onValueChange={handleOccasionSelectChange}
             required
+            disabled={isSaving}
           >
             <SelectTrigger id="occasion">
               <SelectValue placeholder="シーンを選択" />
@@ -189,6 +200,7 @@ export const GiftForm = ({
               placeholder="新しいシーンを入力"
               className="mt-2"
               required
+              disabled={isSaving}
             />
           )}
         </div>
@@ -201,6 +213,7 @@ export const GiftForm = ({
             onChange={handleChange}
             placeholder="例: ワイン、お菓子"
             required
+            disabled={isSaving}
           />
         </div>
         <div className="space-y-2">
@@ -212,6 +225,7 @@ export const GiftForm = ({
             value={values.date}
             onChange={handleChange}
             required
+            disabled={isSaving}
           />
         </div>
         <div className="space-y-2 md:col-span-2">
@@ -222,16 +236,25 @@ export const GiftForm = ({
             value={values.note}
             onChange={handleChange}
             placeholder="気持ちのメモを短く"
+            disabled={isSaving}
           />
         </div>
       </div>
-      <DialogFooter>
-        <Button type="submit" disabled={isSaving}>
-          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          記録を保存
+      <DialogFooter className="flex-row justify-between">
+        <Button type="button" variant="destructive" onClick={handleDelete} disabled={isSaving}>
+          <Trash2 className="mr-2 h-4 w-4" />
+          削除
         </Button>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+            キャンセル
+          </Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            保存
+          </Button>
+        </div>
       </DialogFooter>
     </form>
   )
 }
-

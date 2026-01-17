@@ -6,6 +6,7 @@ export type GiftEntry = {
   amount: number
   person: string
   occasion: string
+  item: string // New field for what was given/received
   date: string
   note: string
 }
